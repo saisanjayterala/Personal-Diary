@@ -1,8 +1,9 @@
 import os
 from datetime import datetime
 
-# Directory to store diary entries
+# Directory to store diary entries and user data
 DIARY_DIR = "diary_entries"
+USER_DATA_FILE = "user_data.txt"
 
 # Ensure the directory exists
 if not os.path.exists(DIARY_DIR):
@@ -11,6 +12,31 @@ if not os.path.exists(DIARY_DIR):
 def get_entry_filename(date):
     """Generate a filename for the entry based on the date."""
     return os.path.join(DIARY_DIR, f"{date}.txt")
+
+def register_user():
+    """Register a new user."""
+    print("Register New User")
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+    
+    with open(USER_DATA_FILE, "a") as file:
+        file.write(f"{username},{password}\n")
+    print("User registered successfully!")
+
+def authenticate_user():
+    """Authenticate the user."""
+    print("User Login")
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+    
+    with open(USER_DATA_FILE, "r") as file:
+        users = file.readlines()
+    
+    for user in users:
+        user_info = user.strip().split(",")
+        if username == user_info[0] and password == user_info[1]:
+            return True
+    return False
 
 def write_entry():
     """Allow the user to write a new diary entry or edit an existing one."""
@@ -55,19 +81,29 @@ def delete_entry():
         print(f"No entry found for {date}.")
 
 def view_entries():
-    """View all diary entries."""
-    print("\n--- Your Diary Entries ---\n")
+    """View diary entries for a specific date or all entries."""
+    date = input("Enter date to view entries (YYYY-MM-DD) or press Enter to view all: ")
     
-    if not os.listdir(DIARY_DIR):
-        print("No entries found.")
-        return
-    
-    for filename in os.listdir(DIARY_DIR):
-        with open(os.path.join(DIARY_DIR, filename), "r") as file:
-            date = filename.replace(".txt", "")
-            print(f"Date: {date}")
-            print(file.read())
-            print("-" * 40)
+    if date:
+        entry_filename = get_entry_filename(date)
+        if os.path.exists(entry_filename):
+            with open(entry_filename, "r") as file:
+                print(f"\nDate: {date}")
+                print(file.read())
+        else:
+            print(f"No entry found for {date}.")
+    else:
+        print("\n--- Your Diary Entries ---\n")
+        if not os.listdir(DIARY_DIR):
+            print("No entries found.")
+            return
+        
+        for filename in os.listdir(DIARY_DIR):
+            with open(os.path.join(DIARY_DIR, filename), "r") as file:
+                date = filename.replace(".txt", "")
+                print(f"Date: {date}")
+                print(file.read())
+                print("-" * 40)
 
 def search_entries():
     """Search diary entries by date or keywords."""
@@ -89,12 +125,16 @@ def search_entries():
 
 def diary_menu():
     """Display the diary menu and handle user input."""
+    if not authenticate_user():
+        print("Invalid username or password. Exiting...")
+        return
+    
     while True:
         print("\n--- Personal Diary Menu ---")
         print("1. Write a new entry")
         print("2. Edit an existing entry")
         print("3. Delete an entry")
-        print("4. View all entries")
+        print("4. View entries")
         print("5. Search entries")
         print("6. Exit")
         
@@ -117,6 +157,26 @@ def diary_menu():
         else:
             print("Invalid option. Please try again.")
 
-# Start the diary application
+def main():
+    """Main function to handle registration and login."""
+    while True:
+        print("\n--- Personal Diary Application ---")
+        print("1. Register")
+        print("2. Login")
+        print("3. Exit")
+        
+        choice = input("Choose an option (1-3): ")
+        
+        if choice == "1":
+            register_user()
+        elif choice == "2":
+            diary_menu()
+            break
+        elif choice == "3":
+            print("Exiting... Goodbye!")
+            break
+        else:
+            print("Invalid option. Please try again.")
+
 if __name__ == "__main__":
-    diary_menu()
+    main()
