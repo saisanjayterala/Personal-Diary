@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+import time
 
 # Directory to store diary entries and user data
 DIARY_DIR = "diary_entries"
@@ -10,36 +11,43 @@ def get_entry_filename(date):
     """Generate a filename for the entry based on the date."""
     return os.path.join(DIARY_DIR, f"{date}.txt")
 
+def animate_text(text, delay=0.1):
+    """Animate text output with a delay."""
+    for char in text:
+        print(char, end='', flush=True)
+        time.sleep(delay)
+    print()
+
 def write_entry():
     """Allow the user to write a new diary entry or edit an existing one."""
     date = datetime.now().strftime("%Y-%m-%d")
     entry_filename = get_entry_filename(date)
     
     if os.path.exists(entry_filename):
-        print(f"An entry for {date} already exists.")
+        animate_text(f"\nAn entry for {date} already exists.")
         edit_choice = input("Do you want to edit it? (y/n): ")
         if edit_choice.lower() == 'y':
             edit_entry(entry_filename)
         else:
-            print("Entry not modified.")
+            animate_text("Entry not modified.")
     else:
         with open(entry_filename, "w") as file:
-            print(f"\nWriting entry for {date}:")
+            animate_text(f"\nWriting entry for {date}:")
             entry = input("Write your thoughts: ")
             file.write(f"{entry}\n")
-        print("Entry saved!")
+        animate_text("Entry saved!")
 
 def edit_entry(entry_filename):
     """Allow the user to edit an existing diary entry."""
     with open(entry_filename, "r") as file:
         current_content = file.read()
     
-    print(f"\nCurrent entry for {entry_filename.split('/')[-1].replace('.txt', '')}:\n{current_content}")
+    animate_text(f"\nCurrent entry for {entry_filename.split('/')[-1].replace('.txt', '')}:\n{current_content}")
     new_content = input("Enter new content: ")
     
     with open(entry_filename, "w") as file:
         file.write(f"{new_content}\n")
-    print("Entry updated!")
+    animate_text("Entry updated!")
 
 def delete_entry():
     """Allow the user to delete a diary entry."""
@@ -48,9 +56,9 @@ def delete_entry():
     
     if os.path.exists(entry_filename):
         os.remove(entry_filename)
-        print(f"Entry for {date} deleted.")
+        animate_text(f"Entry for {date} deleted.")
     else:
-        print(f"No entry found for {date}.")
+        animate_text(f"No entry found for {date}.")
 
 def view_entries():
     """View diary entries for a specific date or all entries."""
@@ -60,20 +68,20 @@ def view_entries():
         entry_filename = get_entry_filename(date)
         if os.path.exists(entry_filename):
             with open(entry_filename, "r") as file:
-                print(f"\nDate: {date}")
+                animate_text(f"\nDate: {date}")
                 print(file.read())
         else:
-            print(f"No entry found for {date}.")
+            animate_text(f"No entry found for {date}.")
     else:
-        print("\n--- Your Diary Entries ---\n")
+        animate_text("\n--- Your Diary Entries ---\n")
         if not os.listdir(DIARY_DIR):
-            print("No entries found.")
+            animate_text("No entries found.")
             return
         
         for filename in os.listdir(DIARY_DIR):
             with open(os.path.join(DIARY_DIR, filename), "r") as file:
                 date = filename.replace(".txt", "")
-                print(f"Date: {date}")
+                animate_text(f"\nDate: {date}")
                 print(file.read())
                 print("-" * 40)
 
@@ -96,13 +104,13 @@ def search_by_keyword(keyword):
             content = file.read()
             if keyword in filename or keyword in content:
                 date = filename.replace(".txt", "")
-                print(f"\nDate: {date}")
+                animate_text(f"\nDate: {date}")
                 print(content)
                 print("-" * 40)
                 found = True
     
     if not found:
-        print("No entries found matching your search.")
+        animate_text("No entries found matching your search.")
 
 def search_by_date_range(start_date, end_date):
     """Search diary entries within a date range."""
@@ -112,13 +120,13 @@ def search_by_date_range(start_date, end_date):
         date = filename.replace(".txt", "")
         if start_date <= date <= end_date:
             with open(os.path.join(DIARY_DIR, filename), "r") as file:
-                print(f"\nDate: {date}")
+                animate_text(f"\nDate: {date}")
                 print(file.read())
                 print("-" * 40)
                 found = True
     
     if not found:
-        print("No entries found within the specified date range.")
+        animate_text("No entries found within the specified date range.")
 
 def export_entries():
     """Export all diary entries to a text file."""
@@ -129,12 +137,37 @@ def export_entries():
                 outfile.write(f"Date: {date}\n")
                 outfile.write(infile.read())
                 outfile.write("\n" + ("-" * 40) + "\n")
-    print(f"All entries have been exported to {EXPORT_FILE}.")
+    animate_text(f"All entries have been exported to {EXPORT_FILE}.")
+
+def authenticate_user():
+    """Authenticate the user by checking credentials."""
+    username = input("Enter username: ")
+    password = input("Enter password: ")
+    
+    if not os.path.exists(USER_DATA_FILE):
+        return False
+    
+    with open(USER_DATA_FILE, "r") as file:
+        for line in file:
+            saved_username, saved_password = line.strip().split(":")
+            if saved_username == username and saved_password == password:
+                return True
+    
+    return False
+
+def register_user():
+    """Register a new user by saving their credentials."""
+    username = input("Enter new username: ")
+    password = input("Enter new password: ")
+    
+    with open(USER_DATA_FILE, "a") as file:
+        file.write(f"{username}:{password}\n")
+    animate_text("Registration successful!")
 
 def diary_menu():
     """Display the diary menu and handle user input."""
     if not authenticate_user():
-        print("Invalid username or password. Exiting...")
+        animate_text("Invalid username or password. Exiting...")
         return
     
     while True:
@@ -163,10 +196,10 @@ def diary_menu():
         elif choice == "6":
             export_entries()
         elif choice == "7":
-            print("Exiting... Goodbye!")
+            animate_text("Exiting... Goodbye!")
             break
         else:
-            print("Invalid option. Please try again.")
+            animate_text("Invalid option. Please try again.")
 
 def main():
     """Main function to handle registration and login."""
@@ -184,10 +217,10 @@ def main():
             diary_menu()
             break
         elif choice == "3":
-            print("Exiting... Goodbye!")
+            animate_text("Exiting... Goodbye!")
             break
         else:
-            print("Invalid option. Please try again.")
+            animate_text("Invalid option. Please try again.")
 
 if __name__ == "__main__":
     main()
