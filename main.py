@@ -4,39 +4,11 @@ from datetime import datetime
 # Directory to store diary entries and user data
 DIARY_DIR = "diary_entries"
 USER_DATA_FILE = "user_data.txt"
-
-# Ensure the directory exists
-if not os.path.exists(DIARY_DIR):
-    os.makedirs(DIARY_DIR)
+EXPORT_FILE = "diary_export.txt"
 
 def get_entry_filename(date):
     """Generate a filename for the entry based on the date."""
     return os.path.join(DIARY_DIR, f"{date}.txt")
-
-def register_user():
-    """Register a new user."""
-    print("Register New User")
-    username = input("Enter username: ")
-    password = input("Enter password: ")
-    
-    with open(USER_DATA_FILE, "a") as file:
-        file.write(f"{username},{password}\n")
-    print("User registered successfully!")
-
-def authenticate_user():
-    """Authenticate the user."""
-    print("User Login")
-    username = input("Enter username: ")
-    password = input("Enter password: ")
-    
-    with open(USER_DATA_FILE, "r") as file:
-        users = file.readlines()
-    
-    for user in users:
-        user_info = user.strip().split(",")
-        if username == user_info[0] and password == user_info[1]:
-            return True
-    return False
 
 def write_entry():
     """Allow the user to write a new diary entry or edit an existing one."""
@@ -106,14 +78,23 @@ def view_entries():
                 print("-" * 40)
 
 def search_entries():
-    """Search diary entries by date or keywords."""
-    search_terms = input("Enter date (YYYY-MM-DD) or keywords to search: ").split()
+    """Search diary entries by date range or keywords."""
+    search_term = input("Enter a keyword to search or 'date range' to search by date range: ")
+    if search_term.lower() == 'date range':
+        start_date = input("Enter start date (YYYY-MM-DD): ")
+        end_date = input("Enter end date (YYYY-MM-DD): ")
+        search_by_date_range(start_date, end_date)
+    else:
+        search_by_keyword(search_term)
+
+def search_by_keyword(keyword):
+    """Search diary entries by keyword."""
     found = False
     
     for filename in os.listdir(DIARY_DIR):
         with open(os.path.join(DIARY_DIR, filename), "r") as file:
             content = file.read()
-            if any(term in filename or term in content for term in search_terms):
+            if keyword in filename or keyword in content:
                 date = filename.replace(".txt", "")
                 print(f"\nDate: {date}")
                 print(content)
@@ -122,6 +103,33 @@ def search_entries():
     
     if not found:
         print("No entries found matching your search.")
+
+def search_by_date_range(start_date, end_date):
+    """Search diary entries within a date range."""
+    found = False
+    
+    for filename in os.listdir(DIARY_DIR):
+        date = filename.replace(".txt", "")
+        if start_date <= date <= end_date:
+            with open(os.path.join(DIARY_DIR, filename), "r") as file:
+                print(f"\nDate: {date}")
+                print(file.read())
+                print("-" * 40)
+                found = True
+    
+    if not found:
+        print("No entries found within the specified date range.")
+
+def export_entries():
+    """Export all diary entries to a text file."""
+    with open(EXPORT_FILE, "w") as outfile:
+        for filename in os.listdir(DIARY_DIR):
+            with open(os.path.join(DIARY_DIR, filename), "r") as infile:
+                date = filename.replace(".txt", "")
+                outfile.write(f"Date: {date}\n")
+                outfile.write(infile.read())
+                outfile.write("\n" + ("-" * 40) + "\n")
+    print(f"All entries have been exported to {EXPORT_FILE}.")
 
 def diary_menu():
     """Display the diary menu and handle user input."""
@@ -136,9 +144,10 @@ def diary_menu():
         print("3. Delete an entry")
         print("4. View entries")
         print("5. Search entries")
-        print("6. Exit")
+        print("6. Export all entries")
+        print("7. Exit")
         
-        choice = input("Choose an option (1-6): ")
+        choice = input("Choose an option (1-7): ")
         
         if choice == "1":
             write_entry()
@@ -152,6 +161,8 @@ def diary_menu():
         elif choice == "5":
             search_entries()
         elif choice == "6":
+            export_entries()
+        elif choice == "7":
             print("Exiting... Goodbye!")
             break
         else:
