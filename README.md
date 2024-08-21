@@ -3,6 +3,7 @@
 ## Overview
 
 This Personal Diary Application is a command-line tool that allows users to create, manage, and search through their personal diary entries. It provides a secure and easy-to-use interface for maintaining a digital diary.
+![image](https://github.com/user-attachments/assets/f27d1ce6-5491-463a-8cba-5aadef54229c)
 
 ## Features
 
